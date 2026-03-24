@@ -3,11 +3,11 @@
 The open source AI research agent
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/getcompanion-ai/feynman/main/scripts/install/install.sh | bash
+curl -fsSL https://feynman.is/install | bash
 ```
 
 ```powershell
-irm https://raw.githubusercontent.com/getcompanion-ai/feynman/main/scripts/install/install.ps1 | iex
+irm https://feynman.is/install.ps1 | iex
 ```
 
 Or install the npm fallback:
@@ -109,4 +109,4 @@ git clone https://github.com/getcompanion-ai/feynman.git
 cd feynman && npm install && npm run start
 ```
 
-[Docs](https://feynman.companion.ai/docs) · [MIT License](LICENSE)
+[Docs](https://feynman.is/docs) · [MIT License](LICENSE)
