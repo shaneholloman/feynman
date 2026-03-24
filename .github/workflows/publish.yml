@@ -65,40 +65,12 @@ jobs:
         include:
           - id: linux-x64
             os: ubuntu-latest
-            smoke_shell: bash
-            smoke_command: |
-              VERSION=$(node -p "require('./package.json').version")
-              tmp=$(mktemp -d)
-              tar -xzf "dist/release/feynman-${VERSION}-linux-x64.tar.gz" -C "$tmp"
-              "$tmp/feynman-${VERSION}-linux-x64/feynman" --help >/tmp/feynman-help.out
-              head -20 /tmp/feynman-help.out
           - id: darwin-x64
             os: macos-15-intel
-            smoke_shell: bash
-            smoke_command: |
-              VERSION=$(node -p "require('./package.json').version")
-              tmp=$(mktemp -d)
-              tar -xzf "dist/release/feynman-${VERSION}-darwin-x64.tar.gz" -C "$tmp"
-              "$tmp/feynman-${VERSION}-darwin-x64/feynman" --help >/tmp/feynman-help.out
-              head -20 /tmp/feynman-help.out
           - id: darwin-arm64
             os: macos-14
-            smoke_shell: bash
-            smoke_command: |
-              VERSION=$(node -p "require('./package.json').version")
-              tmp=$(mktemp -d)
-              tar -xzf "dist/release/feynman-${VERSION}-darwin-arm64.tar.gz" -C "$tmp"
-              "$tmp/feynman-${VERSION}-darwin-arm64/feynman" --help >/tmp/feynman-help.out
-              head -20 /tmp/feynman-help.out
           - id: win32-x64
             os: windows-latest
-            smoke_shell: pwsh
-            smoke_command: |
-              $version = node -p "require('./package.json').version"
-              $tmp = Join-Path $env:RUNNER_TEMP ("feynman-smoke-" + [guid]::NewGuid().ToString("N"))
-              New-Item -ItemType Directory -Path $tmp | Out-Null
-              Expand-Archive -LiteralPath "dist/release/feynman-$version-win32-x64.zip" -DestinationPath $tmp -Force
-              & "$tmp/feynman-$version-win32-x64/feynman.cmd" --help | Select-Object -First 20
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
@@ -108,9 +80,24 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run build
       - run: npm run build:native-bundle
-      - name: Smoke native bundle
-        shell: ${{ matrix.smoke_shell }}
-        run: ${{ matrix.smoke_command }}
+      - name: Smoke native bundle (Unix)
+        if: matrix.id != 'win32-x64'
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          tmp=$(mktemp -d)
+          tar -xzf "dist/release/feynman-${VERSION}-${{ matrix.id }}.tar.gz" -C "$tmp"
+          "$tmp/feynman-${VERSION}-${{ matrix.id }}/feynman" --help >/tmp/feynman-help.out
+          head -20 /tmp/feynman-help.out
+      - name: Smoke native bundle (Windows)
+        if: matrix.id == 'win32-x64'
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          $tmp = Join-Path $env:RUNNER_TEMP ("feynman-smoke-" + [guid]::NewGuid().ToString("N"))
+          New-Item -ItemType Directory -Path $tmp | Out-Null
+          Expand-Archive -LiteralPath "dist/release/feynman-$version-win32-x64.zip" -DestinationPath $tmp -Force
+          & "$tmp/feynman-$version-win32-x64/feynman.cmd" --help | Select-Object -First 20
       - uses: actions/upload-artifact@v4
         with:
           name: native-${{ matrix.id }}
