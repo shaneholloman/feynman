@@ -58,22 +58,37 @@ const installCommands = [
       </div>
 
       <div class="flex w-full max-w-3xl flex-col items-center gap-4">
-        <div class="grid w-full gap-3 sm:grid-cols-3">
+        <div class="flex flex-wrap items-center justify-center gap-2">
           {installCommands.map((entry) => (
             <button
-              class="install-cmd group flex items-center justify-between gap-3 rounded-lg bg-muted px-4 py-3 text-left font-mono text-sm transition-colors hover:bg-muted/80 cursor-pointer"
+              class:list={[
+                "install-toggle rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+                entry.label === installCommands[0].label
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border bg-background text-muted-foreground hover:text-foreground",
+              ]}
               data-command={entry.command}
-              aria-label={`Copy ${entry.label} install command`}
+              data-label={entry.label}
+              aria-label={`Show ${entry.label} install command`}
             >
-              <div class="flex min-w-0 flex-col">
-                <span class="text-xs uppercase tracking-[0.2em] text-muted-foreground">{entry.label}</span>
-                <span class="truncate">{entry.command}</span>
-              </div>
-              <span class="install-copy shrink-0 text-muted-foreground transition-colors group-hover:text-foreground">Copy</span>
-              <span class="install-check hidden shrink-0 text-primary">Copied</span>
+              {entry.label}
             </button>
           ))}
         </div>
+
+        <button
+          id="install-cmd"
+          class="group flex w-full items-center justify-between gap-3 rounded-lg bg-muted px-4 py-3 text-left font-mono text-sm transition-colors hover:bg-muted/80 cursor-pointer"
+          data-command={installCommands[0].command}
+          aria-label="Copy install command"
+        >
+          <div class="flex min-w-0 flex-col">
+            <span id="install-label" class="text-xs uppercase tracking-[0.2em] text-muted-foreground">{installCommands[0].label}</span>
+            <span id="install-command" class="truncate">{installCommands[0].command}</span>
+          </div>
+          <span id="install-copy" class="shrink-0 text-muted-foreground transition-colors group-hover:text-foreground">Copy</span>
+          <span id="install-check" class="hidden shrink-0 text-primary">Copied</span>
+        </button>
 
         <div class="flex items-center gap-3">
           <a href="/docs/getting-started/installation">
@@ -212,15 +227,38 @@ const installCommands = [
 
 <script is:inline>
   function initCopyBtn() {
-    document.querySelectorAll(".install-cmd").forEach(function (btn) {
-      if (btn._bound) return
-      btn._bound = true
-      btn.addEventListener("click", function () {
-        var command = btn.getAttribute("data-command")
+    var toggles = Array.from(document.querySelectorAll(".install-toggle"))
+    var commandBtn = document.getElementById("install-cmd")
+    var commandText = document.getElementById("install-command")
+    var commandLabel = document.getElementById("install-label")
+    var copyLabel = document.getElementById("install-copy")
+    var checkLabel = document.getElementById("install-check")
+
+    toggles.forEach(function (toggle) {
+      if (toggle._toggleBound) return
+      toggle._toggleBound = true
+      toggle.addEventListener("click", function () {
+        var command = toggle.getAttribute("data-command")
+        var label = toggle.getAttribute("data-label")
+        if (!commandBtn || !commandText || !commandLabel || !command || !label) return
+        commandBtn.setAttribute("data-command", command)
+        commandText.textContent = command
+        commandLabel.textContent = label
+        toggles.forEach(function (item) {
+          item.classList.remove("border-foreground", "bg-foreground", "text-background")
+          item.classList.add("border-border", "bg-background", "text-muted-foreground")
+        })
+        toggle.classList.remove("border-border", "bg-background", "text-muted-foreground")
+        toggle.classList.add("border-foreground", "bg-foreground", "text-background")
+      })
+    })
+
+    if (commandBtn && !commandBtn._copyBound) {
+      commandBtn._copyBound = true
+      commandBtn.addEventListener("click", function () {
+        var command = commandBtn.getAttribute("data-command")
         if (!command) return
         navigator.clipboard.writeText(command).then(function () {
-          var copyLabel = btn.querySelector(".install-copy")
-          var checkLabel = btn.querySelector(".install-check")
           if (!copyLabel || !checkLabel) return
           copyLabel.classList.add("hidden")
           checkLabel.classList.remove("hidden")
