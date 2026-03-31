@@ -20,6 +20,18 @@ export type PiRuntimeOptions = {
 	initialPrompt?: string;
 };
 
+export function getFeynmanNpmPrefixPath(feynmanAgentDir: string): string {
+	return resolve(dirname(feynmanAgentDir), "npm-global");
+}
+
+export function applyFeynmanPackageManagerEnv(feynmanAgentDir: string): string {
+	const feynmanNpmPrefixPath = getFeynmanNpmPrefixPath(feynmanAgentDir);
+	process.env.FEYNMAN_NPM_PREFIX = feynmanNpmPrefixPath;
+	process.env.NPM_CONFIG_PREFIX = feynmanNpmPrefixPath;
+	process.env.npm_config_prefix = feynmanNpmPrefixPath;
+	return feynmanNpmPrefixPath;
+}
+
 export function resolvePiPaths(appRoot: string) {
 	return {
 		piPackageRoot: resolve(appRoot, "node_modules", "@mariozechner", "pi-coding-agent"),
@@ -83,8 +95,7 @@ export function buildPiArgs(options: PiRuntimeOptions): string[] {
 
 export function buildPiEnv(options: PiRuntimeOptions): NodeJS.ProcessEnv {
 	const paths = resolvePiPaths(options.appRoot);
-	const feynmanHome = dirname(options.feynmanAgentDir);
-	const feynmanNpmPrefixPath = resolve(feynmanHome, "npm-global");
+	const feynmanNpmPrefixPath = getFeynmanNpmPrefixPath(options.feynmanAgentDir);
 	const feynmanNpmBinPath = resolve(feynmanNpmPrefixPath, "bin");
 
 	const currentPath = process.env.PATH ?? "";

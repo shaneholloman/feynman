@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildPiArgs, buildPiEnv, resolvePiPaths } from "../src/pi/runtime.js";
+import { applyFeynmanPackageManagerEnv, buildPiArgs, buildPiEnv, resolvePiPaths } from "../src/pi/runtime.js";
 
 test("buildPiArgs includes configured runtime paths and prompt", () => {
 	const args = buildPiArgs({
@@ -57,6 +57,37 @@ test("buildPiEnv wires Feynman paths into the Pi environment", () => {
 			),
 		);
 	} finally {
+		if (previousUppercasePrefix === undefined) {
+			delete process.env.NPM_CONFIG_PREFIX;
+		} else {
+			process.env.NPM_CONFIG_PREFIX = previousUppercasePrefix;
+		}
+		if (previousLowercasePrefix === undefined) {
+			delete process.env.npm_config_prefix;
+		} else {
+			process.env.npm_config_prefix = previousLowercasePrefix;
+		}
+	}
+});
+
+test("applyFeynmanPackageManagerEnv pins npm globals to the Feynman prefix", () => {
+	const previousFeynmanPrefix = process.env.FEYNMAN_NPM_PREFIX;
+	const previousUppercasePrefix = process.env.NPM_CONFIG_PREFIX;
+	const previousLowercasePrefix = process.env.npm_config_prefix;
+
+	try {
+		const prefix = applyFeynmanPackageManagerEnv("/home/.feynman/agent");
+
+		assert.equal(prefix, "/home/.feynman/npm-global");
+		assert.equal(process.env.FEYNMAN_NPM_PREFIX, "/home/.feynman/npm-global");
+		assert.equal(process.env.NPM_CONFIG_PREFIX, "/home/.feynman/npm-global");
+		assert.equal(process.env.npm_config_prefix, "/home/.feynman/npm-global");
+	} finally {
+		if (previousFeynmanPrefix === undefined) {
+			delete process.env.FEYNMAN_NPM_PREFIX;
+		} else {
+			process.env.FEYNMAN_NPM_PREFIX = previousFeynmanPrefix;
+		}
 		if (previousUppercasePrefix === undefined) {
 			delete process.env.NPM_CONFIG_PREFIX;
 		} else {

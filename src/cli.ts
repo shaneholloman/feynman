@@ -18,6 +18,7 @@ import { ensureFeynmanHome, getDefaultSessionDir, getFeynmanAgentDir, getFeynman
 import { launchPiChat } from "./pi/launch.js";
 import { CORE_PACKAGE_SOURCES, getOptionalPackagePresetSources, listOptionalPackagePresets } from "./pi/package-presets.js";
 import { normalizeFeynmanSettings, normalizeThinkingLevel, parseModelSpec } from "./pi/settings.js";
+import { applyFeynmanPackageManagerEnv } from "./pi/runtime.js";
 import {
 	authenticateModelProvider,
 	getCurrentModelSpec,
@@ -154,6 +155,7 @@ async function handleModelCommand(subcommand: string | undefined, args: string[]
 }
 
 async function handleUpdateCommand(workingDir: string, feynmanAgentDir: string, source?: string): Promise<void> {
+	applyFeynmanPackageManagerEnv(feynmanAgentDir);
 	const settingsManager = SettingsManager.create(workingDir, feynmanAgentDir);
 	const packageManager = new DefaultPackageManager({
 		cwd: workingDir,
@@ -177,6 +179,7 @@ async function handleUpdateCommand(workingDir: string, feynmanAgentDir: string, 
 }
 
 async function handlePackagesCommand(subcommand: string | undefined, args: string[], workingDir: string, feynmanAgentDir: string): Promise<void> {
+	applyFeynmanPackageManagerEnv(feynmanAgentDir);
 	const settingsManager = SettingsManager.create(workingDir, feynmanAgentDir);
 	const configuredSources = new Set(
 		settingsManager

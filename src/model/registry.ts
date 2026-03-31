@@ -7,6 +7,5 @@ export function getModelsJsonPath(authPath: string): string {
 }
 
 export function createModelRegistry(authPath: string): ModelRegistry {
-	return new ModelRegistry(AuthStorage.create(authPath), getModelsJsonPath(authPath));
+	return ModelRegistry.create(AuthStorage.create(authPath), getModelsJsonPath(authPath));
 }
-
